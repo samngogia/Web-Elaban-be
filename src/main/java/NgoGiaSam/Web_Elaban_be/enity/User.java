@@ -44,6 +44,7 @@ public class User {
     @Column(name = "activation_code")
     private String activationCode;
 
+
     @Lob
     @Column(name = "avatar", columnDefinition = "LONGTEXT")
     private String avatar;
