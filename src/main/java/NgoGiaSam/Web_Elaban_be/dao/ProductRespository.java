@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RepositoryRestResource(path = "products")
-public interface ProductRespository extends JpaRepository<Product,Integer> {
+public interface ProductRespository extends JpaRepository<Product,Long> {
 
 
     // 1. Tìm theo tên sản phẩm (Giả định biến trong Product là 'name')
