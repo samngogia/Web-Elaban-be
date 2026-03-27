@@ -19,8 +19,8 @@ public class ProductImage {
     @Column(name = "is_thumbnail") // Thay cho 'icon' để xác định ảnh đại diện sản phẩm
     private boolean isThumbnail;
 
-    @Column(name = "imageUrl", length = 512) // Đường dẫn ảnh (thường dùng URL từ Cloudinary/S3)
-    private String imageUrl;
+    @Column(name = "url", length = 512) // Đường dẫn ảnh (thường dùng URL từ Cloudinary/S3)
+    private String url;
 
     @Lob
     @Column(name = "data", columnDefinition = "LONGTEXT")

@@ -8,6 +8,12 @@ public class Endpoints {
             "/products/**",
             "/images",//hình ảnh
             "/images/**",
+            "/product_image",       // thêm dòng này
+            "/product_image/**",// thêm dòng này
+            "/uploads/**",
+            "/reviews",          // thêm dòng này
+            "/reviews/**",
+            "/reviews/search/**",
 //            "/users/search/existsByUsername",
 //            "/users/search/existsByEmail",
             "/users/search/**",//nguoidung/search

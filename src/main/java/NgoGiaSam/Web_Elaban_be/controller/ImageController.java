@@ -35,18 +35,18 @@ public class ImageController {
             Product product = productRespository.findById(productId)
                     .orElseThrow(() -> new RuntimeException("Product not found"));
 
-            String imageUrl = fileStorageService.saveFile(file);
+            String url = fileStorageService.saveFile(file);
 
             ProductImage image = new ProductImage();
             image.setProduct(product);
             image.setName(file.getOriginalFilename());
-            image.setImageUrl(imageUrl);
+            image.setUrl(url);
             image.setThumbnail(isThumbnail);
             image.setData(null); // không dùng base64 nữa
 
             productImageRespository.save(image);
 
-            return ResponseEntity.ok(imageUrl);
+            return ResponseEntity.ok(url);
 
         } catch (IOException e) {
             // Trả về lỗi 500 nếu quá trình lưu file vật lý thất bại

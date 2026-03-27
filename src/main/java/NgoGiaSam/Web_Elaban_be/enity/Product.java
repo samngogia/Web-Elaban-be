@@ -40,6 +40,8 @@ public class Product {
     @Column(name = "avg_rating") // Trung bình đánh giá
     private double avgRating;
 
+
+    ;
     // --- CÁC MỐI QUAN HỆ (RELATIONSHIPS) ---
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
@@ -61,4 +63,6 @@ public class Product {
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<WishList> wishlists;
+
+
 }

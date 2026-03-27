@@ -17,6 +17,17 @@ public class Category {
     @Column(name = "name", length = 256, nullable = false)
     private String name;
 
+
+    // CHA
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    private Category parent;
+
+    // CON
+    @OneToMany(mappedBy = "parent")
+    private List<Category> children;
+
+
     @ManyToMany(fetch = FetchType.LAZY,
             cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
     @JoinTable(
