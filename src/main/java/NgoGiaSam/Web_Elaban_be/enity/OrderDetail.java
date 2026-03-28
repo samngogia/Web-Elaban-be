@@ -13,7 +13,7 @@ public class OrderDetail {
     private Long id; // Đổi từ int sang Long
 
     @Column(name = "quantity")
-    private int quantity;
+    private Long quantity;
 
     @Column(name = "price")
     private double price; // Giá tại thời điểm mua (để lưu vết dù sau này SP có tăng giá)

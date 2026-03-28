@@ -17,12 +17,15 @@ public class Endpoints {
 //            "/users/search/existsByUsername",
 //            "/users/search/existsByEmail",
             "/users/search/**",//nguoidung/search
-            "/account/activate" // tai khoản
+            "/account/activate" ,// tai khoản
+            "/cart/**"
     };
 
     public static final String[] PUBLIC_POST_ENDPOINTS = {
             "/account/register",//tài khoản/đăng ký
-            "/account/login" //tài khoản//đăng nhập
+            "/account/login", //tài khoản//đăng nhập
+            "/cart/add"
+
     };
 
     public static final String[] ADMIN_GET_ENDPOINTS = {
