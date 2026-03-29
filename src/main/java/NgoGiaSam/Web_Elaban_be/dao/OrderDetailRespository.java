@@ -6,5 +6,5 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 
 @RepositoryRestResource (path = "order_detail")
-public interface OrderDetailRespository extends JpaRepository<OrderDetail,Integer> {
+public interface OrderDetailRespository extends JpaRepository<OrderDetail,Long> {
 }

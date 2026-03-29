@@ -14,5 +14,7 @@ public interface CartItemRespository extends JpaRepository<CartItem,Long> {
 
     Optional<CartItem> findByCart_IdAndProduct_Id(Long cartId, Long productId);
 
+    // Thêm dòng này để đếm số lượng bản ghi theo Cart ID
+    int countByCart_Id(Long cartId);
 }
 

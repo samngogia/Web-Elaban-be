@@ -18,13 +18,19 @@ public class Endpoints {
 //            "/users/search/existsByEmail",
             "/users/search/**",//nguoidung/search
             "/account/activate" ,// tai khoản
-            "/cart/**"
+            "/cart/**",
+            "cart/{userId}",
+            "/payment_method",
+            "/payment_method/**",
+            "/shipping_method",
+            "/shipping_method/**"
     };
 
     public static final String[] PUBLIC_POST_ENDPOINTS = {
             "/account/register",//tài khoản/đăng ký
             "/account/login", //tài khoản//đăng nhập
-            "/cart/add"
+            "/cart/add",
+            "/order/checkout"
 
     };
 
