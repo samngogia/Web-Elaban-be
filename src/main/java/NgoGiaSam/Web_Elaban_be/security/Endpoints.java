@@ -23,15 +23,23 @@ public class Endpoints {
             "/payment_method",
             "/payment_method/**",
             "/shipping_method",
-            "/shipping_method/**"
+            "/shipping_method/**",
+
+
+            "/vnpay/payment-return",
     };
 
     public static final String[] PUBLIC_POST_ENDPOINTS = {
             "/account/register",//tài khoản/đăng ký
             "/account/login", //tài khoản//đăng nhập
             "/cart/add",
-            "/order/checkout"
+            "/order/checkout",
 
+
+            "/account/forgot-password",  // thêm
+            "/account/reset-password",   // thêm
+
+            "/vnpay/create-payment",
     };
 
     public static final String[] ADMIN_GET_ENDPOINTS = {

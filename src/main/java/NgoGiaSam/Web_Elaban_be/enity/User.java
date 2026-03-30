@@ -3,6 +3,7 @@ package NgoGiaSam.Web_Elaban_be.enity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -44,6 +45,13 @@ public class User {
     @Column(name = "activation_code")
     private String activationCode;
 
+
+    //quên mk trả về OTP
+    @Column(name = "reset_otp")
+    private String resetOtp;
+
+    @Column(name = "otp_expiry")
+    private LocalDateTime otpExpiry;
 
     @Lob
     @Column(name = "avatar", columnDefinition = "LONGTEXT")

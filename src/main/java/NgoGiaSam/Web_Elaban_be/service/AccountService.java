@@ -7,11 +7,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
 public class AccountService {
+
+
+
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -91,5 +97,56 @@ public class AccountService {
         } else {
             return ResponseEntity.badRequest().body(new ErrorLog("Incorrect activation code!"));
         }
+    }
+
+    // Gửi OTP reset mật khẩu
+    public ResponseEntity<?> forgotPassword(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            return ResponseEntity.badRequest().body(new ErrorLog("Email không tồn tại!"));
+        }
+
+        // Tạo OTP 6 số
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        user.setResetOtp(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(10)); // hết hạn sau 10 phút
+        userRepository.save(user);
+
+        // Gửi email
+        String subject = "Mã OTP đặt lại mật khẩu - ElaBan";
+        String text = "<html><body>"
+                + "<p>Mã OTP đặt lại mật khẩu của bạn là:</p>"
+                + "<h1 style='letter-spacing:8px;'>" + otp + "</h1>"
+                + "<p>Mã có hiệu lực trong <b>10 phút</b>.</p>"
+                + "<p>Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>"
+                + "</body></html>";
+
+        emailService.sendMessage("ngogiasamc3@gmail.com", email, subject, text);
+        return ResponseEntity.ok("OTP đã được gửi đến email của bạn!");
+    }
+
+    // Xác nhận OTP và đổi mật khẩu
+    public ResponseEntity<?> resetPassword(String email, String otp, String newPassword) {
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            return ResponseEntity.badRequest().body(new ErrorLog("Email không tồn tại!"));
+        }
+
+        if (user.getResetOtp() == null || !user.getResetOtp().equals(otp)) {
+            return ResponseEntity.badRequest().body(new ErrorLog("OTP không đúng!"));
+        }
+
+        if (user.getOtpExpiry() == null || LocalDateTime.now().isAfter(user.getOtpExpiry())) {
+            return ResponseEntity.badRequest().body(new ErrorLog("OTP đã hết hạn!"));
+        }
+
+        // Đổi mật khẩu
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetOtp(null);
+        user.setOtpExpiry(null);
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Đặt lại mật khẩu thành công!");
     }
 }

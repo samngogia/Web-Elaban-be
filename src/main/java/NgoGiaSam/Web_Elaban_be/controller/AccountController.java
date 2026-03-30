@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "http://localhost:3000")
 public class AccountController {
     @Autowired
-
-
     private AccountService accountService;
 
 
@@ -73,5 +71,19 @@ public class AccountController {
 
         }
         return ResponseEntity.badRequest().body("Xác thực không thành công!");
+    }
+
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        return accountService.forgotPassword(email);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @RequestParam String email,
+            @RequestParam String otp,
+            @RequestParam String newPassword) {
+        return accountService.resetPassword(email, otp, newPassword);
     }
 }
