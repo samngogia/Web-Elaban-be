@@ -3,6 +3,7 @@ package NgoGiaSam.Web_Elaban_be.enity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -22,7 +23,22 @@ public class Review {
     private double rating; // Số sao (1.0 - 5.0)
 
     @Column(name = "created_date")
-    private Date createdDate;
+    private LocalDateTime createdDate;
+
+    // admin duyệt hay chưa
+    @Column(name = "approved")
+    private boolean approved = false;
+
+    // admin có ẩn review không
+    @Column(name = "hidden")
+    private boolean hidden = false;
+
+    // phản hồi của admin
+    @Column(name = "admin_reply", columnDefinition = "TEXT")
+    private String adminReply;
+
+    @Column(name = "reply_date")
+    private LocalDateTime replyDate;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @JoinColumn(name = "product_id", nullable = false)

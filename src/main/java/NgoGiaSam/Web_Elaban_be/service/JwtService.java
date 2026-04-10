@@ -24,36 +24,29 @@ public class JwtService {
     @Autowired
     private UserService userService;
 
-    public String generateToken(String username){
-        Map<String,Object> claims = new HashMap<>();
-
+    public String generateToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
         User user = userService.findByUsername(username);
 
-        boolean isAdmin = false;
-        boolean isStaff = false;
-        boolean isCustomer = false;
+        if (user != null && user.getRoles() != null) {
+            List<String> rolesList = new ArrayList<>();
 
-        if(user != null && user.getRoles().size()>0){
-            List<Role> list =   user.getRoles();
-            for(Role role : list){
-                if(role.getName().equals("ADMIN")){
-                    isAdmin = true;
-                }
-                if(role.getName().equals("STAFF")){
-                    isStaff = true;
-                }if(role.getName().equals("CUSTOMER")){
-                    isCustomer = true;
-                }
+            for (Role role : user.getRoles()) {
+                // Thêm tiền tố ROLE_ để Spring Security nhận diện đúng
+                rolesList.add("ROLE_" + role.getName());
+
+                // Giữ lại các biến cũ nếu Frontend của bạn đang dùng chúng để hiển thị UI
+                if (role.getName().equals("ADMIN")) claims.put("isAdmin", true);
+                if (role.getName().equals("STAFF")) claims.put("isStaff", true);
+                if (role.getName().equals("CUSTOMER")) claims.put("isCustomer", true);
             }
+
+            // ĐÂY LÀ DÒNG QUAN TRỌNG NHẤT: Đưa danh sách Roles vào Claims
+            claims.put("roles", rolesList);
+            claims.put("userId", user.getId());
         }
-        claims.put("isAdmin", isAdmin);
-        claims.put("isStaff", isStaff);
-        claims.put("isCustomer", isCustomer);
-        claims.put("userId", user != null ? user.getId() : null);
 
-
-        return createToken(claims,username);
-
+        return createToken(claims, username);
     }
 
 

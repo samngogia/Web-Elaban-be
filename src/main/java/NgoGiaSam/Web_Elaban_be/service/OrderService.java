@@ -56,6 +56,10 @@ public class OrderService {
         order.setTotalAmount(totalAmount);
         order.setPaymentStatus("UNPAID");
         order.setShippingStatus("PENDING");
+        order.setFullName(request.getFullName());
+        order.setPhoneNumber(request.getPhoneNumber());
+        order.setNote(request.getNote());
+
 
         Order savedOrder = orderRespository.save(order);
 

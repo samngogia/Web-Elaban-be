@@ -32,12 +32,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findByUsername(String username) {
         // Lúc này 'User' đã được hiểu là NgoGiaSam.Web_Elaban_be.enity.User
-        return userRespository.findByUsername(username);
+        return userRespository.findByUsername(username).orElse(null);
     }
 
     @Override
     public  UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User userEntity = userRespository.findByUsername(username);
+        User userEntity = userRespository.findByUsername(username).orElse(null);
         if(userEntity == null){
             throw new UsernameNotFoundException("Tai khoan khong ton tai!");
         }

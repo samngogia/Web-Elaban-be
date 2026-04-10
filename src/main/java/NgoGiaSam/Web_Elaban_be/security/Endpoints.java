@@ -24,9 +24,15 @@ public class Endpoints {
             "/payment_method/**",
             "/shipping_method",
             "/shipping_method/**",
+            "/reviews/search/**",
 
+            "/admin/orders/my-orders/**",
+
+            "/api/wishlist/**",
 
             "/vnpay/payment-return",
+
+
     };
 
     public static final String[] PUBLIC_POST_ENDPOINTS = {
@@ -40,15 +46,30 @@ public class Endpoints {
             "/account/reset-password",   // thêm
 
             "/vnpay/create-payment",
+
+            "/api/chat",
+
+            "/api/reviews",
+            "/api/wishlist/add",
     };
 
     public static final String[] ADMIN_GET_ENDPOINTS = {
             "/users",//người dùng
             "/users/**",
+            "/admin/dashboard/**",  // thêm dòng này
+
+            "/admin/orders",      // thêm
+            "/admin/orders/**",   // thêm
+            "/admin/categories",   // thêm
+            "/admin/categories/**",// thêm
+            "/admin/users",        // thêm
+            "/admin/users/**",     // thêm
     };
 
     public static final String[] ADMIN_POST_ENDPOINTS = {
             "/products",//sản phẩm
+            "/product",
+            "/products/**"
     };
 
 }

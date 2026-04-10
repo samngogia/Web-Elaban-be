@@ -6,5 +6,5 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 
 @RepositoryRestResource (path="payment_method")
-public interface PaymentMethodRespository extends JpaRepository<PaymentMethod,Integer> {
+public interface PaymentMethodRespository extends JpaRepository<PaymentMethod,Long> {
 }

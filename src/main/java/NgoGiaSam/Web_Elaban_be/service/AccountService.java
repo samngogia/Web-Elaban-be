@@ -80,7 +80,7 @@ public class AccountService {
     }
 
     public ResponseEntity<?> activateAccount(String email, String activationCode) {
-        User user = userRepository.findByEmail(email);
+        User user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null) {
             return ResponseEntity.badRequest().body(new ErrorLog("User does not exist!"));
@@ -101,7 +101,7 @@ public class AccountService {
 
     // Gửi OTP reset mật khẩu
     public ResponseEntity<?> forgotPassword(String email) {
-        User user = userRepository.findByEmail(email);
+        User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
             return ResponseEntity.badRequest().body(new ErrorLog("Email không tồn tại!"));
         }
@@ -127,7 +127,7 @@ public class AccountService {
 
     // Xác nhận OTP và đổi mật khẩu
     public ResponseEntity<?> resetPassword(String email, String otp, String newPassword) {
-        User user = userRepository.findByEmail(email);
+        User user = userRepository.findByEmail(email).orElse(null);
 
         if (user == null) {
             return ResponseEntity.badRequest().body(new ErrorLog("Email không tồn tại!"));

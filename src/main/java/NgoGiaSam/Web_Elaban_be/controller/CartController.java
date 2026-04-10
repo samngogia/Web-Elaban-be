@@ -28,12 +28,18 @@ public class CartController {
 
     // Thêm vào giỏ
     @PostMapping("/add")
-    public ResponseEntity<?> addToCart(@RequestBody CartItemRequest request) {
+    public ResponseEntity<?> addToCart(
+            @RequestParam Long userId,
+            @RequestBody CartItemRequest request
+    ) {
+        request.setUserId(userId);
+
         Cart cart = cartService.addToCart(request);
         int totalItems = cartItemRespository.findByCart_Id(cart.getId()).size();
+
         return ResponseEntity.ok(new CartResponse(
                 cart.getId(),
-                request.getUserId(),
+                userId,
                 totalItems
         ));
     }

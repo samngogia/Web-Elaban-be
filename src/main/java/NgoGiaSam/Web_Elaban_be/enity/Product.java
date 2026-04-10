@@ -41,6 +41,9 @@ public class Product {
     private double avgRating;
 
 
+    @Column(name = "color")
+    private String color;
+
     ;
     // --- CÁC MỐI QUAN HỆ (RELATIONSHIPS) ---
 
@@ -61,7 +64,7 @@ public class Product {
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     private List<OrderDetail> orderDetails;
 
-    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<WishList> wishlists;
 
 

@@ -6,5 +6,5 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 
 @RepositoryRestResource (path = "shipping_method")
-public interface ShippingMethodRespository extends JpaRepository<ShippingMethod,Integer> {
+public interface ShippingMethodRespository extends JpaRepository<ShippingMethod,Long> {
 }

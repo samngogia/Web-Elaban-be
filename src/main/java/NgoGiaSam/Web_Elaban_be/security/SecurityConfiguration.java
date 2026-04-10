@@ -51,24 +51,59 @@ public class SecurityConfiguration {
 
         http.authorizeHttpRequests(
                 config->config
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET,Endpoints.PUBLIC_GET_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST,Endpoints.PUBLIC_POST_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET,Endpoints.ADMIN_GET_ENDPOINTS).hasAuthority("ADMIN")//hasAnyAuthority : cho phep nhieu quuyen
-                        .requestMatchers(HttpMethod.POST,Endpoints.ADMIN_POST_ENDPOINTS).hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET,Endpoints.ADMIN_GET_ENDPOINTS).hasRole("ADMIN")//hasAnyAuthority : cho phep nhieu quuyen
+                        .requestMatchers(HttpMethod.POST,Endpoints.ADMIN_POST_ENDPOINTS).hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/admin/orders/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST,   "/admin/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,    "/admin/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/admin/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH,  "/admin/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/admin/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/admin/reviews/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/admin/reviews/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/reviews/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/wishlist/**").authenticated()
+                        .requestMatchers("/orders/my-orders").authenticated()
                         .anyRequest().authenticated()
         );
-        http.cors(cors ->{
+//        http.cors(cors ->{
+//            cors.configurationSource(request -> {
+//
+//                CorsConfiguration corsConfig = new CorsConfiguration();
+//                corsConfig.addAllowedOrigin(Endpoints.FRONT_END_HOST);
+//                corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE","OPTIONS"));
+//                corsConfig.addAllowedHeader("*");
+//                return corsConfig;
+//
+//
+//            });
+//
+//        });
+        http.cors(cors -> {
             cors.configurationSource(request -> {
-
                 CorsConfiguration corsConfig = new CorsConfiguration();
+
                 corsConfig.addAllowedOrigin(Endpoints.FRONT_END_HOST);
-                corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE","OPTIONS"));
-                corsConfig.addAllowedHeader("*");
+
+                corsConfig.setAllowedMethods(Arrays.asList(
+                        "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+                ));
+
+                corsConfig.setAllowedHeaders(Arrays.asList(
+                        "Authorization",
+                        "Content-Type",
+                        "Cache-Control"
+                ));
+
                 return corsConfig;
-
-
             });
-
         });
         http.addFilterBefore(jwtFilter , UsernamePasswordAuthenticationFilter.class);
         http.sessionManagement((session) ->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

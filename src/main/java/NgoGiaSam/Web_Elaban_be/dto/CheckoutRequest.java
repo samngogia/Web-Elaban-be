@@ -7,10 +7,13 @@ import java.util.List;
 @Data
 public class CheckoutRequest {
     private Long userId;
+    private String fullName;
+    private String phoneNumber;
     private String shippingAddress;
     private String billingAddress;
-    private Integer paymentMethodId;
-    private Integer shippingMethodId;
+    private String note;
+    private Long paymentMethodId;
+    private Long shippingMethodId;
     private List<CheckoutItem> items;
 
     @Data
