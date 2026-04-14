@@ -41,16 +41,10 @@ public class ReviewController {
             review.setRating(request.getRating());
             review.setContent(request.getContent());
             review.setCreatedDate(LocalDateTime.now());
+            review.setApproved(false);  // mặc định chưa duyệt
 
             reviewRespository.save(review);
-
-            // Cập nhật avgRating của sản phẩm
-            List<Review> reviews = reviewRespository.findByProduct_Id(product.getId());
-            double avg = reviews.stream().mapToDouble(Review::getRating).average().orElse(0);
-            product.setAvgRating(avg);
-            productRespository.save(product);
-
-            return ResponseEntity.ok("Đánh giá thành công!");
+            return ResponseEntity.ok("Đánh giá đã được gửi, chờ admin duyệt!");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

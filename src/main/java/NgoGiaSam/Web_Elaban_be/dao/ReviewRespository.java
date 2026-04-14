@@ -6,25 +6,26 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.data.rest.core.annotation.RestResource;
 
 import java.util.List;
 
 @RepositoryRestResource(path = "reviews")
 public interface ReviewRespository extends JpaRepository<Review,Long> {
+    @RestResource(path = "findByProduct_IdAndApprovedTrueOrderByCreatedDateDesc")
+    List<Review> findByProduct_IdAndApprovedTrueOrderByCreatedDateDesc(
+            @Param("productId") Long productId);
 
-    Page<Review> findByProduct_Id(@Param("productId") Long productId, Pageable pageable);
+    @RestResource(exported = false)
+    List<Review> findByProduct_Id(Long productId);
 
-    List<Review> findByProduct_Id(@Param("productId") Long productId);
+    @RestResource(exported = false)
+    List<Review> findByApprovedFalse();
 
-    @Query("SELECT r FROM Review r WHERE r.product.id = :productId ORDER BY r.createdDate DESC")
-    List<Review> findByProduct_IdOrderByCreatedDateDesc(@Param("productId") Long productId);
+    @RestResource(exported = false)
+    List<Review> findByProduct_IdAndApprovedTrue(Long productId);
 
-
-
-    List<Review> findByApproved(boolean approved);
-
-    List<Review> findByHidden(boolean hidden);
-
+    @RestResource(exported = false)
     @Query("SELECT r FROM Review r ORDER BY r.createdDate DESC")
-    List<Review> getAllForAdmin();
+    List<Review> findAllByOrderByCreatedDateDesc();
 }

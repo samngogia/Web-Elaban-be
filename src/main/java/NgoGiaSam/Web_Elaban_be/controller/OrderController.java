@@ -8,6 +8,7 @@ import NgoGiaSam.Web_Elaban_be.enity.Order;
 import NgoGiaSam.Web_Elaban_be.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -55,16 +56,19 @@ public class OrderController {
 //    }
 
     @GetMapping
+    @Transactional
     public ResponseEntity<?> getAllOrders() {
-
         List<Order> orders = orderRespository.findAll()
                 .stream()
-                .sorted((a, b) -> b.getCreatedDate().compareTo(a.getCreatedDate()))
+                .sorted((a, b) -> {
+                    if (a.getCreatedDate() == null) return 1;
+                    if (b.getCreatedDate() == null) return -1;
+                    return b.getCreatedDate().compareTo(a.getCreatedDate());
+                })
                 .toList();
 
         List<Map<String, Object>> result = orders.stream().map(o -> {
             Map<String, Object> map = new HashMap<>();
-
             map.put("id", o.getId());
             map.put("fullName", o.getFullName());
             map.put("phoneNumber", o.getPhoneNumber());
@@ -74,7 +78,7 @@ public class OrderController {
             map.put("totalAmount", o.getTotalAmount());
             map.put("createdDate", o.getCreatedDate());
             map.put("note", o.getNote());
-
+            map.put("username", o.getUser() != null ? o.getUser().getUsername() : "");
             map.put("orderDetails", o.getOrderDetails().stream().map(d -> {
                 Map<String, Object> detail = new HashMap<>();
                 detail.put("productId", d.getProduct().getId());
@@ -83,7 +87,6 @@ public class OrderController {
                 detail.put("price", d.getPrice());
                 return detail;
             }).toList());
-
             return map;
         }).toList();
 

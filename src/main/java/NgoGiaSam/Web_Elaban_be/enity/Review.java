@@ -27,11 +27,11 @@ public class Review {
 
     // admin duyệt hay chưa
     @Column(name = "approved")
-    private boolean approved = false;
+    private Boolean approved = false;
 
     // admin có ẩn review không
     @Column(name = "hidden")
-    private boolean hidden = false;
+    private Boolean hidden = false;
 
     // phản hồi của admin
     @Column(name = "admin_reply", columnDefinition = "TEXT")
@@ -40,11 +40,11 @@ public class Review {
     @Column(name = "reply_date")
     private LocalDateTime replyDate;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH})
     @JoinColumn(name = "product_id", nullable = false)
     private Product product; // Đổi từ Sach sang Product
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH})
     @JoinColumn(name = "user_id", nullable = false)
     private User user; // Đổi từ NguoiDung sang User
 }

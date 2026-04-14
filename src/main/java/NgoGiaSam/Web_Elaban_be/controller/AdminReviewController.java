@@ -1,64 +1,82 @@
 package NgoGiaSam.Web_Elaban_be.controller;
 
+import NgoGiaSam.Web_Elaban_be.dao.ProductRespository;
+import NgoGiaSam.Web_Elaban_be.dao.ReviewRespository;
 import NgoGiaSam.Web_Elaban_be.dto.ReplyReviewRequest;
 import NgoGiaSam.Web_Elaban_be.dto.ReviewAdminResponse;
 import NgoGiaSam.Web_Elaban_be.enity.Review;
 import NgoGiaSam.Web_Elaban_be.service.ReviewAdminService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/admin/reviews")
-@CrossOrigin(origins = "http://localhost:3000")
+@RequiredArgsConstructor
 public class AdminReviewController {
-    @Autowired
-    private ReviewAdminService reviewAdminService;
+    private final ReviewRespository reviewRespository;
+    private final ProductRespository productRespository;
 
-    private ReviewAdminResponse mapToDto(Review review) {
-        return new ReviewAdminResponse(
-                review.getId(),
-                review.getUser().getUsername(),
-                review.getProduct().getName(),
-                (int) review.getRating(),
-                review.getContent(),
-                review.isApproved(),
-                !review.isHidden(),
-                review.getAdminReply(),
-                review.getCreatedDate(),
-                review.getReplyDate()
-        );
+    // Lấy tất cả review chờ duyệt
+    @GetMapping("/pending")
+    @Transactional
+    public ResponseEntity<?> getPendingReviews() {
+        List<Review> reviews = reviewRespository.findByApprovedFalse();
+        return ResponseEntity.ok(mapReviews(reviews));
     }
 
+    // Lấy tất cả review
     @GetMapping
-    public List<ReviewAdminResponse> getAllReviews() {
-        return reviewAdminService.getAllReviews()
-                .stream()
-                .map(this::mapToDto)
-                .toList();
+    @Transactional
+    public ResponseEntity<?> getAllReviews() {
+        List<Review> reviews = reviewRespository.findAllByOrderByCreatedDateDesc();
+        return ResponseEntity.ok(mapReviews(reviews));
     }
 
+    // Duyệt review
     @PutMapping("/{id}/approve")
-    public ReviewAdminResponse approveReview(@PathVariable Long id) {
-        return mapToDto(reviewAdminService.approveReview(id));
+    public ResponseEntity<?> approveReview(@PathVariable Long id) {
+        return reviewRespository.findById(id).map(r -> {
+            r.setApproved(true);
+            reviewRespository.save(r);
+
+            // Cập nhật avgRating
+            List<Review> approved = reviewRespository
+                    .findByProduct_IdAndApprovedTrue(r.getProduct().getId());
+            double avg = approved.stream()
+                    .mapToDouble(Review::getRating).average().orElse(0);
+            r.getProduct().setAvgRating(avg);
+            productRespository.save(r.getProduct());
+
+            return ResponseEntity.ok("Đã duyệt!");
+        }).orElse(ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/{id}/hide")
-    public ReviewAdminResponse hideReview(@PathVariable Long id) {
-        return mapToDto(reviewAdminService.hideReview(id));
+    // Từ chối / xóa review
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteReview(@PathVariable Long id) {
+        reviewRespository.deleteById(id);
+        return ResponseEntity.ok("Đã xóa!");
     }
 
-    @PutMapping("/{id}/show")
-    public ReviewAdminResponse showReview(@PathVariable Long id) {
-        return mapToDto(reviewAdminService.showReview(id));
-    }
-
-    @PutMapping("/{id}/reply")
-    public ReviewAdminResponse replyReview(
-            @PathVariable Long id,
-            @RequestBody ReplyReviewRequest request
-    ) {
-        return mapToDto(reviewAdminService.replyReview(id, request.getReply()));
+    private List<Map<String, Object>> mapReviews(List<Review> reviews) {
+        return reviews.stream().map(r -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", r.getId());
+            map.put("content", r.getContent());
+            map.put("rating", r.getRating());
+            map.put("approved", r.getApproved());
+            map.put("createdDate", r.getCreatedDate());
+            map.put("productId", r.getProduct().getId());
+            map.put("productName", r.getProduct().getName());
+            map.put("username", r.getUser().getUsername());
+            return map;
+        }).collect(java.util.stream.Collectors.toList());
     }
 }

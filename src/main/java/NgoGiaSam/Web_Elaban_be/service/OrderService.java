@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -89,5 +92,30 @@ public class OrderService {
                 "UNPAID",
                 "PENDING"
         );
+    }
+
+    @Transactional
+    public List<Map<String, Object>> getOrdersByUserId(Long userId) {
+        List<Order> orders = orderRespository.findByUser_IdOrderByCreatedDateDesc(userId);
+        return orders.stream().map(o -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", o.getId());
+            map.put("totalAmount", o.getTotalAmount());
+            map.put("paymentStatus", o.getPaymentStatus());
+            map.put("shippingStatus", o.getShippingStatus());
+            map.put("shippingAddress", o.getShippingAddress());
+            map.put("fullName", o.getFullName());
+            map.put("phoneNumber", o.getPhoneNumber());
+            map.put("createdDate", o.getCreatedDate());
+            map.put("orderDetails", o.getOrderDetails().stream().map(d -> {
+                Map<String, Object> detail = new HashMap<>();
+                detail.put("productId", d.getProduct().getId());
+                detail.put("productName", d.getProduct().getName());
+                detail.put("quantity", d.getQuantity());
+                detail.put("price", d.getPrice());
+                return detail;
+            }).collect(java.util.stream.Collectors.toList()));
+            return map;
+        }).collect(java.util.stream.Collectors.toList());
     }
 }

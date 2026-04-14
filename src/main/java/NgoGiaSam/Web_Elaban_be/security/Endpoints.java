@@ -30,6 +30,12 @@ public class Endpoints {
 
             "/api/wishlist/**",
 
+
+            "/api/recommendations/**",
+
+            "/api/recommendations/**",   // thêm nếu chưa có
+            "/reviews/search/**",        // thêm nếu chưa có
+            "/order/my-orders/**",
             "/vnpay/payment-return",
 
 
@@ -63,7 +69,8 @@ public class Endpoints {
             "/admin/categories",   // thêm
             "/admin/categories/**",// thêm
             "/admin/users",        // thêm
-            "/admin/users/**",     // thêm
+            "/admin/users/**",// thêm
+
     };
 
     public static final String[] ADMIN_POST_ENDPOINTS = {
