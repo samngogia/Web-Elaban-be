@@ -27,7 +27,7 @@ public class Review {
 
     // admin duyệt hay chưa
     @Column(name = "approved")
-    private Boolean approved = false;
+    private Boolean approved = true;
 
     // admin có ẩn review không
     @Column(name = "hidden")

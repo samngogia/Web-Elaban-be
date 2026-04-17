@@ -19,7 +19,7 @@ public class Endpoints {
             "/users/search/**",//nguoidung/search
             "/account/activate" ,// tai khoản
             "/cart/**",
-            "cart/{userId}",
+
             "/payment_method",
             "/payment_method/**",
             "/shipping_method",
@@ -55,7 +55,7 @@ public class Endpoints {
 
             "/api/chat",
 
-            "/api/reviews",
+            "/api/reviews/**",
             "/api/wishlist/add",
     };
 

@@ -24,7 +24,21 @@ import java.util.stream.Collectors;
 public class RecommendationController {
     private final ProductRecommendationRepository recommendationRepo;
     private final ProductRespository productRespository;
+    @GetMapping("/{productId}")
+    public ResponseEntity<?> getAllRecommendations(@PathVariable Long productId) {
 
+        List<ProductRecommendation> similar =
+                recommendationRepo.findContentBasedByProductId(productId, PageRequest.of(0, 8));
+
+        List<ProductRecommendation> boughtTogether =
+                recommendationRepo.findAprioriByProductId(productId, PageRequest.of(0, 8));
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("similar", mapToProducts(similar));
+        result.put("boughtTogether", mapToProducts(boughtTogether));
+
+        return ResponseEntity.ok(result);
+    }
     // Dải 1 — Content-Based: sản phẩm tương tự
     @GetMapping("/similar/{productId}")
     @Transactional

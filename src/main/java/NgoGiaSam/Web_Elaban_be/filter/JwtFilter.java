@@ -32,62 +32,87 @@ public class JwtFilter extends OncePerRequestFilter {
     private UserService userService;
 
 
-
-
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
         String path = request.getServletPath();
 
-        if (path.equals("/api/chat")) {
+        System.out.println(">>> JWT Filter called for path: " + path);   // <--- thêm dòng này để debug
+
+        // BỎ QUA HOÀN TOÀN cho tất cả review
+        if (path != null && path.contains("/reviews")) {        // <--- thay đổi điều kiện
+            System.out.println(">>> JWT Filter: SKIPPING review path: " + path);
             filterChain.doFilter(request, response);
             return;
         }
 
+        // Chỉ xử lý JWT cho các path cần authentication
         String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = null;
         String username = null;
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+
+        try {
             token = authHeader.substring(7);
             username = jwtService.extracUsername(token);
-
+        } catch (Exception e) {
+            System.out.println(">>> JWT Filter: Token invalid or expired: " + e.getMessage());
         }
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userService.loadUserByUsername(username);
 
-            if (jwtService.validateToken(token, userDetails)) {
-                // Cách 1: Đọc trực tiếp danh sách roles từ Claim (Linh hoạt nhất)
-                List<String> roles = jwtService.extractClaim(token, claims ->
-                        (List<String>) claims.get("roles")
-                );
+        if (token != null && username != null &&
+                SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                List<GrantedAuthority> authorities = new ArrayList<>();
+            try {
+                UserDetails userDetails = userService.loadUserByUsername(username);
 
-                if (roles != null) {
-                    roles.forEach(role -> {
-                        String authority = role.startsWith("ROLE_")
-                                ? role
-                                : "ROLE_" + role;
+                if (jwtService.validateToken(token, userDetails)) {
+                    List<String> roles = null;
+                    try {
+                        roles = jwtService.extractClaim(token, claims -> (List<String>) claims.get("roles"));
+                    } catch (Exception ignored) {}
 
-                        authorities.add(new SimpleGrantedAuthority(authority));
-                    });
-                } else {
-                    Boolean isAdmin = jwtService.extractClaim(
-                            token,
-                            claims -> claims.get("isAdmin", Boolean.class)
-                    );
+                    List<GrantedAuthority> authorities = new ArrayList<>();
+                    if (roles != null && !roles.isEmpty()) {
+                        for (String role : roles) {
+                            String formatted = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+                            authorities.add(new SimpleGrantedAuthority(formatted));
+                        }
+                    } else {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+                    }
 
-                    authorities.add(new SimpleGrantedAuthority(
-                            isAdmin ? "ROLE_ADMIN" : "ROLE_USER"
-                    ));
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
-                System.out.println("Roles from token = " + roles);
-                System.out.println("Authorities = " + authorities);
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, authorities);
-
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            } catch (Exception e) {
+                System.out.println(">>> JWT Filter: Authentication error: " + e.getMessage());
             }
         }
+
         filterChain.doFilter(request, response);
-    }}
+    }
+
+    // Hàm này quyết định path nào KHÔNG cần JWT
+    private boolean isPublicPath(String path) {
+        if (path == null) return false;
+
+        return path.startsWith("/api/reviews") ||
+                path.startsWith("/reviews") ||
+                path.startsWith("/api/products") ||
+                path.startsWith("/products") ||
+                path.startsWith("/images") ||
+                path.startsWith("/product_image") ||
+                path.startsWith("/uploads") ||
+                path.startsWith("/static") ||
+                path.startsWith("/account/") ||
+                path.startsWith("/api/chat");
+    }
+}

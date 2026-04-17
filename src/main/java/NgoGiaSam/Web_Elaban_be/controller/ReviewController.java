@@ -9,10 +9,7 @@ import NgoGiaSam.Web_Elaban_be.enity.Review;
 import NgoGiaSam.Web_Elaban_be.enity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 import java.time.LocalDateTime;
@@ -41,12 +38,17 @@ public class ReviewController {
             review.setRating(request.getRating());
             review.setContent(request.getContent());
             review.setCreatedDate(LocalDateTime.now());
-            review.setApproved(false);  // mặc định chưa duyệt
+            review.setApproved(true);  // mặc định chưa duyệt
 
             reviewRespository.save(review);
             return ResponseEntity.ok("Đánh giá đã được gửi, chờ admin duyệt!");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+    @DeleteMapping("/admin/reviews/{id}")
+    public ResponseEntity<?> deleteReview(@PathVariable Long id) {
+        reviewRespository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 }

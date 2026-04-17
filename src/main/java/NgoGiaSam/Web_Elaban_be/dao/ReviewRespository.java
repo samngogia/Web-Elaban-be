@@ -12,12 +12,10 @@ import java.util.List;
 
 @RepositoryRestResource(path = "reviews")
 public interface ReviewRespository extends JpaRepository<Review,Long> {
-    @RestResource(path = "findByProduct_IdAndApprovedTrueOrderByCreatedDateDesc")
-    List<Review> findByProduct_IdAndApprovedTrueOrderByCreatedDateDesc(
-            @Param("productId") Long productId);
 
-    @RestResource(exported = false)
-    List<Review> findByProduct_Id(Long productId);
+    // Lấy tất cả review theo sản phẩm, không filter approved
+    @RestResource(path = "findByProduct_IdOrderByCreatedDateDesc")
+    List<Review> findByProduct_IdOrderByCreatedDateDesc(@Param("productId") Long productId);
 
     @RestResource(exported = false)
     List<Review> findByApprovedFalse();
@@ -25,7 +23,7 @@ public interface ReviewRespository extends JpaRepository<Review,Long> {
     @RestResource(exported = false)
     List<Review> findByProduct_IdAndApprovedTrue(Long productId);
 
-    @RestResource(exported = false)
+    @RestResource(path = "allReviews", exported = true)
     @Query("SELECT r FROM Review r ORDER BY r.createdDate DESC")
     List<Review> findAllByOrderByCreatedDateDesc();
 }

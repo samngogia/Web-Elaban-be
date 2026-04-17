@@ -23,14 +23,6 @@ public class AdminReviewController {
     private final ReviewRespository reviewRespository;
     private final ProductRespository productRespository;
 
-    // Lấy tất cả review chờ duyệt
-    @GetMapping("/pending")
-    @Transactional
-    public ResponseEntity<?> getPendingReviews() {
-        List<Review> reviews = reviewRespository.findByApprovedFalse();
-        return ResponseEntity.ok(mapReviews(reviews));
-    }
-
     // Lấy tất cả review
     @GetMapping
     @Transactional
@@ -39,30 +31,32 @@ public class AdminReviewController {
         return ResponseEntity.ok(mapReviews(reviews));
     }
 
-    // Duyệt review
-    @PutMapping("/{id}/approve")
-    public ResponseEntity<?> approveReview(@PathVariable Long id) {
-        return reviewRespository.findById(id).map(r -> {
-            r.setApproved(true);
-            reviewRespository.save(r);
-
-            // Cập nhật avgRating
-            List<Review> approved = reviewRespository
-                    .findByProduct_IdAndApprovedTrue(r.getProduct().getId());
-            double avg = approved.stream()
-                    .mapToDouble(Review::getRating).average().orElse(0);
-            r.getProduct().setAvgRating(avg);
-            productRespository.save(r.getProduct());
-
-            return ResponseEntity.ok("Đã duyệt!");
-        }).orElse(ResponseEntity.notFound().build());
-    }
-
     // Từ chối / xóa review
+    // 2. Xóa review và cập nhật lại điểm trung bình sản phẩm
     @DeleteMapping("/{id}")
+    @Transactional
     public ResponseEntity<?> deleteReview(@PathVariable Long id) {
-        reviewRespository.deleteById(id);
-        return ResponseEntity.ok("Đã xóa!");
+        return reviewRespository.findById(id).map(review -> {
+            Long productId = review.getProduct().getId();
+            // Xóa đánh giá
+            reviewRespository.delete(review);
+            // TÍNH LẠI ĐIỂM TRUNG BÌNH:
+            // Gọi đúng tên hàm findByProduct_IdOrderByCreatedDateDesc có trong Repository của bạn
+            List<Review> remainingReviews = reviewRespository.findByProduct_IdOrderByCreatedDateDesc(productId);
+
+            double avg = remainingReviews.stream()
+                    .mapToDouble(Review::getRating)
+                    .average()
+                    .orElse(0.0);
+
+            // Cập nhật lại vào bảng Product
+            productRespository.findById(productId).ifPresent(p -> {
+                p.setAvgRating(avg);
+                productRespository.save(p);
+            });
+
+            return ResponseEntity.ok("Đã xóa đánh giá và cập nhật lại điểm sản phẩm!");
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     private List<Map<String, Object>> mapReviews(List<Review> reviews) {

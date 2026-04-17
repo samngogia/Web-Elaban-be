@@ -48,69 +48,75 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
+        http.authorizeHttpRequests(config -> config
 
-        http.authorizeHttpRequests(
-                config->config
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET,Endpoints.PUBLIC_GET_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.POST,Endpoints.PUBLIC_POST_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET,Endpoints.ADMIN_GET_ENDPOINTS).hasAnyAuthority ("ROLE_ADMIN", "ADMIN")//hasAnyAuthority : cho phep nhieu quuyen
-                        .requestMatchers(HttpMethod.POST,Endpoints.ADMIN_POST_ENDPOINTS).hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/products/**").hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/products/**").hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/admin/orders/**").hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.POST,   "/admin/categories/**").hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/admin/categories/**").hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/admin/categories/**").hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.PATCH,  "/admin/users/**").hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/admin/users/**").hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/admin/reviews/**").hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/admin/reviews/**").hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers("/admin/reviews/**").hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers("/admin/**").hasAnyAuthority ("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/wishlist/**").authenticated()
-                        .requestMatchers("/orders/my-orders").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/profile/**").authenticated()
-                        .anyRequest().authenticated()
+                // ===== PUBLIC RESOURCES =====
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                // Static files & images
+                .requestMatchers("/images/**", "/image/**", "/product_image/**",
+                        "/product-images/**", "/uploads/**", "/static/**",
+                        "/*.png", "/*.jpg", "/*.jpeg", "/*.gif").permitAll()
+
+                // Auth public
+                .requestMatchers("/account/login", "/account/register").permitAll()
+
+                // REVIEWS - Cho phép public hoàn toàn (đọc + tạo review)
+                .requestMatchers("/api/reviews/search/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/reviews/search/**").permitAll()
+                .requestMatchers("/api/reviews/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
+
+
+
+
+                // Các GET public khác
+                .requestMatchers(HttpMethod.GET,
+                        "/products/**",
+                        "/api/products/**",
+                        "/api/recommendations/**",
+                        "/reviews/**",
+                        "/reviews/search/**"
+                ).permitAll()
+
+                // Wishlist GET public
+                .requestMatchers(HttpMethod.GET, "/api/wishlist/**").permitAll()
+
+                // ===== YÊU CẦU ĐĂNG NHẬP =====
+                .requestMatchers("/cart/**").authenticated()
+                .requestMatchers("/orders/my-orders").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/wishlist/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/wishlist/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/profile/**").authenticated()
+
+                // ===== ADMIN ONLY =====
+                .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.POST, "/products/**").hasAnyAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/products/**").hasAnyAuthority("ROLE_ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/products/**").hasAnyAuthority("ROLE_ADMIN")
+                .requestMatchers("/admin/categories/**", "/admin/users/**", "/admin/orders/**").hasAnyAuthority("ROLE_ADMIN")
+
+                // Fallback
+                .anyRequest().authenticated()
         );
-//        http.cors(cors ->{
-//            cors.configurationSource(request -> {
-//
-//                CorsConfiguration corsConfig = new CorsConfiguration();
-//                corsConfig.addAllowedOrigin(Endpoints.FRONT_END_HOST);
-//                corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE","OPTIONS"));
-//                corsConfig.addAllowedHeader("*");
-//                return corsConfig;
-//
-//
-//            });
-//
-//        });
-        http.cors(cors -> {
-            cors.configurationSource(request -> {
-                CorsConfiguration corsConfig = new CorsConfiguration();
 
-                corsConfig.addAllowedOrigin(Endpoints.FRONT_END_HOST);
+        // ✅ CORS
+        http.cors(cors -> cors.configurationSource(request -> {
+            CorsConfiguration corsConfig = new CorsConfiguration();
+            corsConfig.addAllowedOrigin(Endpoints.FRONT_END_HOST);
+            corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+            corsConfig.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Cache-Control"));
+            return corsConfig;
+        }));
 
-                corsConfig.setAllowedMethods(Arrays.asList(
-                        "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
-                ));
+        // ✅ JWT
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-                corsConfig.setAllowedHeaders(Arrays.asList(
-                        "Authorization",
-                        "Content-Type",
-                        "Cache-Control"
-                ));
+        // ✅ Stateless
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-                return corsConfig;
-            });
-        });
-        http.addFilterBefore(jwtFilter , UsernamePasswordAuthenticationFilter.class);
-        http.sessionManagement((session) ->session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+        http.csrf(csrf -> csrf.disable());
 
-        http.httpBasic(Customizer.withDefaults());
-        http.csrf(csrf->csrf.disable());
         return http.build();
     }
 
