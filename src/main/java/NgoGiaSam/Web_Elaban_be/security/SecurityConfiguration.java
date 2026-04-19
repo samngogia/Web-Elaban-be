@@ -66,7 +66,7 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.GET, "/api/reviews/search/**").permitAll()
                 .requestMatchers("/api/reviews/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
-
+                .requestMatchers(HttpMethod.POST, "/api/voucher/apply").permitAll()
 
 
 
@@ -85,9 +85,16 @@ public class SecurityConfiguration {
                 // ===== YÊU CẦU ĐĂNG NHẬP =====
                 .requestMatchers("/cart/**").authenticated()
                 .requestMatchers("/orders/my-orders").authenticated()
+                .requestMatchers("/api/addresses/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/wishlist/**").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/wishlist/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/profile/**").authenticated()
+
+
+
+
+
+
 
                 // ===== ADMIN ONLY =====
                 .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN")
@@ -95,6 +102,9 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.PATCH, "/products/**").hasAnyAuthority("ROLE_ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/products/**").hasAnyAuthority("ROLE_ADMIN")
                 .requestMatchers("/admin/categories/**", "/admin/users/**", "/admin/orders/**").hasAnyAuthority("ROLE_ADMIN")
+// Admin
+                .requestMatchers("/api/voucher/admin/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/voucher/use/**").authenticated()
 
                 // Fallback
                 .anyRequest().authenticated()
