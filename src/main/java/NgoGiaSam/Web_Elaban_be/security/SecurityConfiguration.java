@@ -48,65 +48,120 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
+//        http.authorizeHttpRequests(config -> config
+//
+//                // ===== PUBLIC RESOURCES =====
+//                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+//
+//                // Static files & images
+//                .requestMatchers("/images/**", "/image/**", "/product_image/**",
+//                        "/product-images/**", "/uploads/**", "/static/**",
+//                        "/*.png", "/*.jpg", "/*.jpeg", "/*.gif").permitAll()
+//
+//                // Auth public
+//                .requestMatchers("/account/login", "/account/register").permitAll()
+//
+//                // REVIEWS - Cho phép public hoàn toàn (đọc + tạo review)
+//                .requestMatchers("/api/reviews/search/**").permitAll()
+////                .requestMatchers(HttpMethod.GET, "/api/reviews/search/**").permitAll()
+//                .requestMatchers("/api/reviews/**").permitAll()
+////                .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
+//                .requestMatchers(HttpMethod.POST, "/api/voucher/apply").permitAll()
+//
+////                        .requestMatchers(HttpMethod.GET, "/api/blog/posts/*/comments").permitAll()
+//                        .requestMatchers("/api/blog/admin/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+//                // Các GET public khác
+//                .requestMatchers(HttpMethod.GET,
+//                        "/products/**",
+//                        "/api/products/**",
+//                        "/api/recommendations/**",
+//                        "/reviews/**",
+//                        "/reviews/search/**",
+//                        "/api/blog/**"
+//                ).permitAll()
+//
+//                // Wishlist GET public
+//                .requestMatchers(HttpMethod.GET, "/api/wishlist/**").permitAll()
+//
+//                // ===== YÊU CẦU ĐĂNG NHẬP =====
+//                .requestMatchers("/cart/**").authenticated()
+//                .requestMatchers("/orders/my-orders").authenticated()
+//                .requestMatchers("/api/addresses/**").authenticated()
+//                .requestMatchers(HttpMethod.POST, "/api/wishlist/**").authenticated()
+//                .requestMatchers(HttpMethod.DELETE, "/api/wishlist/**").authenticated()
+//                .requestMatchers(HttpMethod.PUT, "/api/profile/**").authenticated()
+//
+//                        .requestMatchers(HttpMethod.POST, "/api/blog/posts/*/comments").authenticated()
+//
+//                // ===== ADMIN ONLY =====
+//                .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN")
+//                .requestMatchers(HttpMethod.POST, "/products/**").hasAnyAuthority("ROLE_ADMIN")
+//                .requestMatchers(HttpMethod.PATCH, "/products/**").hasAnyAuthority("ROLE_ADMIN")
+//                .requestMatchers(HttpMethod.DELETE, "/products/**").hasAnyAuthority("ROLE_ADMIN")
+//                .requestMatchers("/admin/categories/**", "/admin/users/**", "/admin/orders/**").hasAnyAuthority("ROLE_ADMIN")
+//// Admin
+//                .requestMatchers("/api/voucher/admin/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+//                        .requestMatchers(HttpMethod.POST, "/api/voucher/use/**").authenticated()
+//
+//                .anyRequest().authenticated()
+//        );
         http.authorizeHttpRequests(config -> config
 
-                // ===== PUBLIC RESOURCES =====
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // Static files & images
-                .requestMatchers("/images/**", "/image/**", "/product_image/**",
-                        "/product-images/**", "/uploads/**", "/static/**",
-                        "/*.png", "/*.jpg", "/*.jpeg", "/*.gif").permitAll()
-
-                // Auth public
-                .requestMatchers("/account/login", "/account/register").permitAll()
-
-                // REVIEWS - Cho phép public hoàn toàn (đọc + tạo review)
-                .requestMatchers("/api/reviews/search/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/reviews/search/**").permitAll()
-                .requestMatchers("/api/reviews/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/voucher/apply").permitAll()
-
-
-
-                // Các GET public khác
+                // ===== PUBLIC (Khách vãng lai) =====
+                .requestMatchers("/images/**", "/uploads/**", "/static/**",
+                        "/product_image/**", "/*.png", "/*.jpg").permitAll()
+                .requestMatchers("/account/register", "/account/login",
+                        "/account/activate", "/account/forgot-password",
+                        "/account/reset-password").permitAll()
                 .requestMatchers(HttpMethod.GET,
-                        "/products/**",
-                        "/api/products/**",
+                        "/products/**", "/api/products/**",
                         "/api/recommendations/**",
-                        "/reviews/**",
-                        "/reviews/search/**"
+                        "/reviews/**", "/reviews/search/**",
+                        "/api/reviews/**", "/api/reviews/search/**",
+                        "/api/blog/**",
+                        "/payment_method/**", "/shipping_method/**"
                 ).permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/voucher/apply").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/wishlist/check").permitAll()
 
-                // Wishlist GET public
-                .requestMatchers(HttpMethod.GET, "/api/wishlist/**").permitAll()
-
-                // ===== YÊU CẦU ĐĂNG NHẬP =====
+                // ===== USER đã đăng nhập =====
                 .requestMatchers("/cart/**").authenticated()
-                .requestMatchers("/orders/my-orders").authenticated()
+                .requestMatchers("/order/**").authenticated()
                 .requestMatchers("/api/addresses/**").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/wishlist/**").authenticated()
-                .requestMatchers(HttpMethod.DELETE, "/api/wishlist/**").authenticated()
+                .requestMatchers("/api/wishlist/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/profile/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/profile/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/reviews").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/blog/posts/*/comments").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/voucher/use/**").authenticated()
 
+                // ===== STAFF (+ ADMIN có hết) =====
+                .requestMatchers(
+                        "/admin/products/**",
+                        "/admin/categories/**",
+                        "/admin/orders/**",
+                        "/admin/reviews/**",
+                        "/api/blog/admin/**"
+                ).hasAnyAuthority("ROLE_STAFF", "ROLE_ADMIN")
+                .requestMatchers(HttpMethod.POST, "/products/**")
+                .hasAnyAuthority("ROLE_STAFF", "ROLE_ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/products/**")
+                .hasAnyAuthority("ROLE_STAFF", "ROLE_ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/products/**")
+                .hasAnyAuthority("ROLE_STAFF", "ROLE_ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/products/**")
+                .hasAnyAuthority("ROLE_STAFF", "ROLE_ADMIN")
 
+                // ===== ADMIN only =====
+                .requestMatchers("/admin/users/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers("/admin/dashboard/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers("/api/voucher/admin/**").hasAuthority("ROLE_ADMIN")
 
+                // Fallback admin/**
+                .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_STAFF")
 
-
-
-
-                // ===== ADMIN ONLY =====
-                .requestMatchers("/admin/**").hasAnyAuthority("ROLE_ADMIN")
-                .requestMatchers(HttpMethod.POST, "/products/**").hasAnyAuthority("ROLE_ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/products/**").hasAnyAuthority("ROLE_ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/products/**").hasAnyAuthority("ROLE_ADMIN")
-                .requestMatchers("/admin/categories/**", "/admin/users/**", "/admin/orders/**").hasAnyAuthority("ROLE_ADMIN")
-// Admin
-                .requestMatchers("/api/voucher/admin/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/voucher/use/**").authenticated()
-
-                // Fallback
                 .anyRequest().authenticated()
         );
 

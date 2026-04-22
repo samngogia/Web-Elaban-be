@@ -54,7 +54,28 @@ public class RecommendationController {
     public ResponseEntity<?> getBoughtTogether(@PathVariable Long productId) {
         List<ProductRecommendation> recs = recommendationRepo
                 .findAprioriByProductId(productId, PageRequest.of(0, 8));
-        return ResponseEntity.ok(mapToProducts(recs));
+
+        boolean hasApriori = true;
+
+        if (recs.isEmpty()) {
+            // Lấy từ trang 2 (bỏ qua 6 đầu đã dùng cho dải similar)
+            recs = recommendationRepo
+                    .findContentBasedByProductId(productId, PageRequest.of(1, 8));
+            hasApriori = false;
+
+            // Nếu trang 2 cũng trống thì lấy trang 0 nhưng đảo ngược
+            if (recs.isEmpty()) {
+                recs = recommendationRepo
+                        .findContentBasedByProductId(productId, PageRequest.of(0, 8));
+                java.util.Collections.reverse(recs);
+            }
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("items", mapToProducts(recs));
+        response.put("hasApriori", hasApriori);
+
+        return ResponseEntity.ok(response);
     }
 
     private List<Map<String, Object>> mapToProducts(
