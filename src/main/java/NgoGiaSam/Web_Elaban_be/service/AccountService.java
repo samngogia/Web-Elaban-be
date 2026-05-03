@@ -1,16 +1,21 @@
 package NgoGiaSam.Web_Elaban_be.service;
 
+import NgoGiaSam.Web_Elaban_be.dao.RoleRespository;
 import NgoGiaSam.Web_Elaban_be.dao.UserRespository;
 import NgoGiaSam.Web_Elaban_be.enity.ErrorLog;
+import NgoGiaSam.Web_Elaban_be.enity.Role;
 import NgoGiaSam.Web_Elaban_be.enity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -23,37 +28,48 @@ public class AccountService {
     private BCryptPasswordEncoder passwordEncoder;
 
     @Autowired
-    private UserRespository userRepository;
+    private UserRespository userRespository;
 
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private RoleRespository roleRepository;
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+
+    @Transactional
     public ResponseEntity<?> registerUser(User user) {
-        // Check if username already exists
-        if (userRepository.existsByUsername(user.getUsername())) {
-            return ResponseEntity.badRequest().body(new ErrorLog("Username already exists."));
+        // Kiểm tra username/email tồn tại
+        if (userRespository.existsByUsername(user.getUsername())) {
+            return ResponseEntity.badRequest().body("Tên đăng nhập đã tồn tại!");
+        }
+        if (userRespository.existsByEmail(user.getEmail())) {
+            return ResponseEntity.badRequest().body("Email đã được sử dụng!");
         }
 
-        // Check if email already exists
-        if (userRepository.existsByEmail(user.getEmail())) {
-            return ResponseEntity.badRequest().body(new ErrorLog("Email already exists."));
-        }
-
-        // Encrypt password
-        String encryptedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(encryptedPassword);
-
-        // Assign and send activation information
-        user.setActivationCode(generateActivationCode());
+        // Mã hóa mật khẩu
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setEnabled(false);
 
-        // Save user to database
-        User savedUser = userRepository.save(user);
+        // Tạo OTP 6 số thay vì UUID
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        user.setActivationCode(otp);
+        user.setOtpExpiry(LocalDateTime.now().plusMinutes(10));
 
-        // Send activation email
-        sendActivationEmail(user.getEmail(), user.getActivationCode());
+        // Gán role USER
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("Role not found"));
+        user.setRoles(List.of(userRole));
 
-        return ResponseEntity.ok("Registration successful");
+        userRespository.save(user);
+
+        // Gửi OTP qua email
+        sendOtpEmail(user.getEmail(), user.getUsername(), otp);
+
+        return ResponseEntity.ok("Đăng ký thành công! Vui lòng kiểm tra email để lấy mã OTP.");
     }
 
     private String generateActivationCode() {
@@ -61,47 +77,57 @@ public class AccountService {
         return UUID.randomUUID().toString();
     }
 
-    private void sendActivationEmail(String email, String activationCode) {
-        String subject = "Activate your account at ElaBan";
-        String text = "<html><body>"
-                + "Please use the following code to activate your account for <b>" + email + "</b>:"
-                + "<br/><h1>" + activationCode + "</h1>"
-                + "</body></html>";
-
-        text += "<br/> Click on the link below to activate your account: ";
-
-        // URL updated to match the English endpoints we set earlier
-        String url = "http://localhost:3000/activate/" + email + "/" + activationCode;
-
-        text += ("<br/> <a href='" + url + "'>" + url + "</a>");
-
-        // Note: Replace the sender email with your configured system email
-        emailService.sendMessage("ngogiasamc3@gmail.com", email, subject, text);
+    private void sendOtpEmail(String email, String username, String otp) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("ElaBan - Mã xác thực tài khoản");
+        message.setText(
+                "Xin chào " + username + ",\n\n" +
+                        "Mã OTP xác thực tài khoản của bạn là:\n\n" +
+                        "        " + otp + "\n\n" +
+                        "Mã có hiệu lực trong 10 phút.\n" +
+                        "Vui lòng không chia sẻ mã này với ai.\n\n" +
+                        "Trân trọng,\nElaBan"
+        );
+        mailSender.send(message);
     }
 
-    public ResponseEntity<?> activateAccount(String email, String activationCode) {
-        User user = userRepository.findByEmail(email).orElse(null);
-
+    public ResponseEntity<?> activateAccount(String email, String otp) {
+        User user = userRespository.findByEmail(email).orElse(null);
         if (user == null) {
-            return ResponseEntity.badRequest().body(new ErrorLog("User does not exist!"));
+            return ResponseEntity.badRequest().body("Email không tồn tại!");
         }
-
         if (user.isEnabled()) {
-            return ResponseEntity.badRequest().body(new ErrorLog("Account is already activated!"));
+            return ResponseEntity.ok("Tài khoản đã được kích hoạt trước đó!");
+        }
+        if (!otp.equals(user.getActivationCode())) {
+            return ResponseEntity.badRequest().body("Mã OTP không đúng!");
         }
 
-        if (activationCode.equals(user.getActivationCode())) {
-            user.setEnabled(true);
-            userRepository.save(user);
-            return ResponseEntity.ok("Account activated successfully!");
-        } else {
-            return ResponseEntity.badRequest().body(new ErrorLog("Incorrect activation code!"));
-        }
+        user.setEnabled(true);
+        user.setActivationCode(null);
+        user.setOtpExpiry(null);
+        userRespository.save(user);
+
+
+        return ResponseEntity.ok("Kích hoạt tài khoản thành công!");
     }
 
+    public ResponseEntity<?> resendOtp(String email) {
+        User user = userRespository.findByEmail(email).orElse(null);
+        if (user == null) return ResponseEntity.badRequest().body("Email không tồn tại!");
+        if (user.isEnabled()) return ResponseEntity.badRequest().body("Tài khoản đã kích hoạt!");
+
+        String otp = String.format("%06d", new Random().nextInt(999999));
+        user.setActivationCode(otp);
+        userRespository.save(user);
+        sendOtpEmail(email, user.getUsername(), otp);
+
+        return ResponseEntity.ok("Đã gửi lại OTP!");
+    }
     // Gửi OTP reset mật khẩu
     public ResponseEntity<?> forgotPassword(String email) {
-        User user = userRepository.findByEmail(email).orElse(null);
+        User user = userRespository.findByEmail(email).orElse(null);
         if (user == null) {
             return ResponseEntity.badRequest().body(new ErrorLog("Email không tồn tại!"));
         }
@@ -110,7 +136,7 @@ public class AccountService {
         String otp = String.format("%06d", new java.util.Random().nextInt(999999));
         user.setResetOtp(otp);
         user.setOtpExpiry(LocalDateTime.now().plusMinutes(10)); // hết hạn sau 10 phút
-        userRepository.save(user);
+        userRespository.save(user);
 
         // Gửi email
         String subject = "Mã OTP đặt lại mật khẩu - ElaBan";
@@ -127,7 +153,7 @@ public class AccountService {
 
     // Xác nhận OTP và đổi mật khẩu
     public ResponseEntity<?> resetPassword(String email, String otp, String newPassword) {
-        User user = userRepository.findByEmail(email).orElse(null);
+        User user = userRespository.findByEmail(email).orElse(null);
 
         if (user == null) {
             return ResponseEntity.badRequest().body(new ErrorLog("Email không tồn tại!"));
@@ -145,7 +171,7 @@ public class AccountService {
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setResetOtp(null);
         user.setOtpExpiry(null);
-        userRepository.save(user);
+        userRespository.save(user);
 
         return ResponseEntity.ok("Đặt lại mật khẩu thành công!");
     }

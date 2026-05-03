@@ -24,6 +24,7 @@ public class OrderService {
     private final ProductRespository productRespository;
     private final CartRespository cartRespository;
     private final CartItemRespository cartItemRespository;
+    private final EmailService emailService;
 
     @Transactional
     public OrderResponse checkout(CheckoutRequest request) {
@@ -86,6 +87,22 @@ public class OrderService {
             );
         });
 
+        try {
+            String customerEmail = user.getEmail();
+            if (customerEmail != null && !customerEmail.isEmpty()) {
+
+                // Tạm thời MỞ KHÓA, cho phép gửi mail với mọi hình thức thanh toán (cả VNPAY và COD)
+                System.out.println("Đang chuẩn bị gửi mail cho: " + customerEmail);
+
+                emailService.sendOrderConfirmationEmail(customerEmail, savedOrder);
+
+                System.out.println(">>> ĐÃ GỬI MAIL THÀNH CÔNG! <<<");
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // In chi tiết lỗi ra nếu có
+            System.err.println("LỖI KHI GỬI EMAIL: " + e.getMessage());
+        }
+
         return new OrderResponse(
                 savedOrder.getId(),
                 totalAmount,
@@ -107,6 +124,7 @@ public class OrderService {
             map.put("fullName", o.getFullName());
             map.put("phoneNumber", o.getPhoneNumber());
             map.put("createdDate", o.getCreatedDate());
+            map.put("paymentMethod", o.getPaymentMethod() != null ? o.getPaymentMethod().getName() : "");
             map.put("orderDetails", o.getOrderDetails().stream().map(d -> {
                 Map<String, Object> detail = new HashMap<>();
                 detail.put("productId", d.getProduct().getId());

@@ -26,8 +26,8 @@ public class ProductImage {
     @Column(name = "data", columnDefinition = "LONGTEXT")
     private String data; // Dùng nếu bạn lưu ảnh dạng Base64 (tuy nhiên nên ưu tiên dùng URL)
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
-    @JoinColumn(name = "product_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
     private Product product; // Đổi từ Sach sang Product
 }
 

@@ -2,6 +2,7 @@ package NgoGiaSam.Web_Elaban_be.controller;
 
 import NgoGiaSam.Web_Elaban_be.dao.OrderRespository;
 import NgoGiaSam.Web_Elaban_be.enity.Order;
+import NgoGiaSam.Web_Elaban_be.service.EmailService;
 import NgoGiaSam.Web_Elaban_be.service.VNPayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ import java.util.Map;
 public class VNPayController {
     private final VNPayService vnPayService;
     private final OrderRespository orderRespository;
-
+    private final EmailService emailService;
     // Tạo URL thanh toán
     @PostMapping("/create-payment")
     public ResponseEntity<?> createPayment(@RequestParam Long orderId) {
@@ -60,6 +61,17 @@ public class VNPayController {
                     order.setPaymentStatus("PAID");
                     orderRespository.save(order);
                     System.out.println("✅ Updated order " + orderId + " to PAID");
+
+                    try {
+                        String customerEmail = order.getUser().getEmail();
+                        if (customerEmail != null && !customerEmail.isEmpty()) {
+                            emailService.sendOrderConfirmationEmail(customerEmail, order);
+                            System.out.println("✅ Đã gửi email xác nhận cho đơn hàng VNPAY " + orderId);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("❌ Lỗi khi gửi email xác nhận (VNPAY): " + e.getMessage());
+                        // Bọc try-catch cẩn thận để lỡ lỗi gửi mail cũng không làm fail cập nhật DB
+                    }
                 });
                 return ResponseEntity.ok("Thanh toán thành công!");
             } else {

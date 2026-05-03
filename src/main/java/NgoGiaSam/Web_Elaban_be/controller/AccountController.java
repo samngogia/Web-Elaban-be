@@ -37,19 +37,27 @@ public class AccountController {
 
     @CrossOrigin(origins =  "http://localhost:3000")
 
-    @PostMapping("/register")//dang-ky
-    public ResponseEntity<?> registerUser(@Validated @RequestBody User user){
-        ResponseEntity<?> response= accountService.registerUser(user);
-        return response;
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody User user) {
+        try {
+            return accountService.registerUser(user);
+        } catch (Exception e) {
+            e.printStackTrace(); // in full stack trace
+            return ResponseEntity.internalServerError().body(e.getMessage());
+        }
     }
 
+    @PostMapping("/activate")  // đổi GET → POST
+    public ResponseEntity<?> activateAccount(
+            @RequestParam String email,
+            @RequestParam String otp) {
+        return accountService.activateAccount(email, otp);
+    }
 
-
-    @GetMapping("/activate") //kich-hoat
-
-    public ResponseEntity<?> activateAccount(@RequestParam String email, @RequestParam String maKickHoat){
-        ResponseEntity<?> response= accountService.activateAccount(email,maKickHoat);
-        return response;
+    // Thêm endpoint gửi lại OTP
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOtp(@RequestParam String email) {
+        return accountService.resendOtp(email);
     }
 
 

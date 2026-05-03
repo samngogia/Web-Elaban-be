@@ -22,39 +22,6 @@ import java.util.Map;
 public class OrderController {
     private final OrderRespository orderRespository;
     private final OrderDetailRespository orderDetailRespository;
-
-//    @GetMapping
-//    public ResponseEntity<?> getAllOrders(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "10") int size,
-//            @RequestParam(defaultValue = "") String status) {
-//
-//        List<Order> orders;
-//        if (!status.isEmpty()) {
-//            orders = orderRespository.findByShippingStatus(status);
-//        } else {
-//            orders = orderRespository.findAll(
-//                    org.springframework.data.domain.PageRequest.of(page, size,
-//                            org.springframework.data.domain.Sort.by("createdDate").descending())
-//            ).getContent();
-//        }
-//
-//        List<Map<String, Object>> result = orders.stream().map(o -> {
-//            Map<String, Object> map = new HashMap<>();
-//            map.put("id", o.getId());
-//            map.put("totalAmount", o.getTotalAmount());
-//            map.put("paymentStatus", o.getPaymentStatus());
-//            map.put("shippingStatus", o.getShippingStatus());
-//            map.put("shippingAddress", o.getShippingAddress());
-//            map.put("createdDate", o.getCreatedDate());
-//            map.put("userId", o.getUser().getId());
-//            map.put("username", o.getUser().getUsername());
-//            return map;
-//        }).collect(java.util.stream.Collectors.toList());
-//
-//        return ResponseEntity.ok(result);
-//    }
-
     @GetMapping
     @Transactional
     public ResponseEntity<?> getAllOrders() {
@@ -79,6 +46,9 @@ public class OrderController {
             map.put("createdDate", o.getCreatedDate());
             map.put("note", o.getNote());
             map.put("username", o.getUser() != null ? o.getUser().getUsername() : "");
+
+            map.put("paymentMethod", o.getPaymentMethod() != null ? o.getPaymentMethod().getName() : "");
+
             map.put("orderDetails", o.getOrderDetails().stream().map(d -> {
                 Map<String, Object> detail = new HashMap<>();
                 detail.put("productId", d.getProduct().getId());

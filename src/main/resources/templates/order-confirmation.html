@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Xác nhận đơn hàng</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f2eb;">
+<table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse; background-color: #ffffff; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+
+    <!-- Header -->
+    <tr>
+        <td align="center" style="padding: 35px 0; background-color: #4A3B32;">
+            <h1 style="margin: 0; color: #ffffff; text-transform: uppercase; letter-spacing: 3px; font-size: 28px; font-weight: 600;">ELABAN</h1>
+            <p style="margin: 8px 0 0 0; color: #E8E3DD; font-size: 13px; letter-spacing: 1px;">NỘI THẤT & PHONG CÁCH SỐNG</p>
+        </td>
+    </tr>
+
+    <!-- Body -->
+    <tr>
+        <td style="padding: 40px 30px;">
+            <h2 style="color: #4A3B32; text-align: center; margin-top: 0; font-size: 24px; font-weight: 600;">CẢM ƠN BẠN ĐÃ ĐẶT HÀNG!</h2>
+
+            <p style="font-size: 15px; color: #333; margin-top: 30px;">Chào <strong th:text="${order.fullName}">Nguyễn Tùng Phong</strong>,</p>
+            <p style="font-size: 15px; color: #555; line-height: 1.6;">ElaBan đã nhận được yêu cầu đặt hàng của bạn. Chúng tôi đang chuẩn bị những sản phẩm nội thất tuyệt vời nhất để giao đến bạn. Dưới đây là thông tin chi tiết:</p>
+
+            <!-- Order Info Box -->
+            <div style="background-color: #Faf8f5; padding: 20px; border-left: 4px solid #8D6E63; margin: 30px 0; border-radius: 4px;">
+                <p style="margin: 8px 0; font-size: 14px; color: #444;"><strong>Mã đơn hàng:</strong> #<span th:text="${order.id}">113</span></p>
+
+                <!-- ĐÃ TRẢ LẠI #dates VÌ JAVA DÙNG java.util.Date -->
+                <p style="margin: 8px 0; font-size: 14px; color: #444;"><strong>Ngày đặt:</strong> <span th:text="${#dates.format(order.createdDate, 'dd/MM/yyyy HH:mm')}">17/04/2026 15:39</span></p>
+
+                <p style="margin: 8px 0; font-size: 14px; color: #444;">
+                    <strong>Thanh toán:</strong>
+                    <span th:text="${order.paymentMethod != null ? order.paymentMethod.name : ''}">VNPAY</span>
+                </p>
+                <p style="margin: 8px 0; font-size: 14px; color: #444;"><strong>Giao đến:</strong> <span th:text="${order.shippingAddress}">Số 12, Xã Liên Chung, Tân Yên, Bắc Giang</span></p>
+            </div>
+
+            <!-- Product Table -->
+            <table width="100%" border="0" cellpadding="12" cellspacing="0" style="font-size: 14px; border-collapse: collapse;">
+                <thead>
+                <tr style="background-color: #F4EFEA; border-bottom: 2px solid #E8E3DD; color: #4A3B32;">
+                    <th align="left" style="font-weight: 600;">Sản phẩm</th>
+                    <th align="center" style="font-weight: 600;">SL</th>
+                    <th align="right" style="font-weight: 600;">Đơn giá</th>
+                    <th align="right" style="font-weight: 600;">Thành tiền</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${order.orderDetails}" style="border-bottom: 1px solid #f0f0f0;">
+                    <td align="left" style="padding: 15px 12px; color: #333;" th:text="${item.productName}">Sofa Da Cao Cấp</td>
+                    <td align="center" style="color: #555;" th:text="${item.quantity}">1</td>
+                    <td align="right" style="color: #555;" th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">2,000,000 đ</td>
+                    <td align="right" style="color: #333;"><strong><span th:text="${#numbers.formatDecimal(item.price * item.quantity, 0, 'COMMA', 0, 'POINT')}"></span> đ</strong></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!-- Summary -->
+            <div style="margin-top: 35px; text-align: right; font-size: 15px; color: #444;">
+                <p style="margin: 8px 0;">Tổng giá trị đơn hàng: <strong th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'">7,359,400 đ</strong></p>
+                <p style="margin: 8px 0;">Phí vận chuyển: <strong>Miễn phí</strong></p>
+
+                <div style="margin-top: 25px; border-top: 2px dashed #E8E3DD; padding-top: 20px;">
+                    <h3 style="color: #4A3B32; margin: 0; font-size: 18px; font-weight: 600;">
+                        SỐ TIỀN CẦN THU THÊM (COD):
+                        <!-- ĐÃ BỎ .name() VÌ PAYMENT STATUS LÀ STRING -->
+                        <span th:text="${order.paymentStatus == 'PAID' ? '0 đ' : #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + ' đ'}">1,929,700 đ</span>
+                    </h3>
+                </div>
+            </div>
+        </td>
+    </tr>
+
+    <!-- Footer -->
+    <tr>
+        <td align="center" style="padding: 25px; background-color: #F4EFEA; color: #777; font-size: 12px; border-top: 1px solid #E8E3DD;">
+            © 2026 ElaBan Furniture. Mọi quyền được bảo lưu.<br>
+            <span style="display: inline-block; margin-top: 5px;">Địa chỉ: Hà Nội, Việt Nam | Hotline: 0862613804</span>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

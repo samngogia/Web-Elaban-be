@@ -112,9 +112,18 @@ public class SecurityConfiguration {
                 // ===== PUBLIC (Khách vãng lai) =====
                 .requestMatchers("/images/**", "/uploads/**", "/static/**",
                         "/product_image/**", "/*.png", "/*.jpg").permitAll()
+
+                .requestMatchers("/error").permitAll()
+
+                .requestMatchers("/vnpay/**").permitAll()
+
                 .requestMatchers("/account/register", "/account/login",
-                        "/account/activate", "/account/forgot-password",
-                        "/account/reset-password").permitAll()
+                        "/account/activate", "/account/resend-otp",
+                        "/account/forgot-password", "/account/reset-password").permitAll()
+                .requestMatchers("/api/reviews/**").permitAll()
+                .requestMatchers("/api/reviews/search/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/users/search/**").permitAll()
+
                 .requestMatchers(HttpMethod.GET,
                         "/products/**", "/api/products/**",
                         "/api/recommendations/**",
@@ -125,7 +134,7 @@ public class SecurityConfiguration {
                 ).permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/voucher/apply").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/wishlist/check").permitAll()
-
+                .requestMatchers("/account/activate", "/account/resend-otp").permitAll()
                 // ===== USER đã đăng nhập =====
                 .requestMatchers("/cart/**").authenticated()
                 .requestMatchers("/order/**").authenticated()

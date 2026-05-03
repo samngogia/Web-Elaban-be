@@ -40,6 +40,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
         System.out.println(">>> JWT Filter called for path: " + path);   // <--- thêm dòng này để debug
 
+// ✅ SKIP account API (login, register, activate...)
+        if (path != null && path.startsWith("/account/") || path.startsWith("/users/search")) {
+            System.out.println(">>> JWT Filter: SKIPPING account path: " + path);
+            filterChain.doFilter(request, response);
+            return;
+        }
         // BỎ QUA HOÀN TOÀN cho tất cả review
         if (path != null && path.contains("/reviews")) {        // <--- thay đổi điều kiện
             System.out.println(">>> JWT Filter: SKIPPING review path: " + path);
@@ -113,6 +119,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 path.startsWith("/uploads") ||
                 path.startsWith("/static") ||
                 path.startsWith("/account/") ||
+                path.startsWith("/api/reviews") ||
+                path.startsWith("/reviews") ||
                 path.startsWith("/api/chat");
     }
 }
