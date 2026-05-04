@@ -36,15 +36,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public  UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User userEntity = userRespository.findByUsername(username).orElse(null);
-        if(userEntity == null){
+        if (userEntity == null) {
             throw new UsernameNotFoundException("Tai khoan khong ton tai!");
         }
-        // 2. Sử dụng đường dẫn đầy đủ cho User của Security để không bị lẫn với Entity User
+        // Dùng constructor 7 tham số để ép Spring Security đọc trạng thái Khóa/Mở Khóa
         return new org.springframework.security.core.userdetails.User(
                 userEntity.getUsername(),
                 userEntity.getPassword(),
+                userEntity.isEnabled(),   // <--- QUAN TRỌNG NHẤT: Lấy từ Database
+                true,                     // accountNonExpired (Tài khoản không hết hạn)
+                true,                     // credentialsNonExpired (Mật khẩu không hết hạn)
+                true,                     // accountNonLocked (Tài khoản không bị khóa cứng)
                 rolesToAuthorities(userEntity.getRoles())
         );
     }

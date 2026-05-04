@@ -77,6 +77,18 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 UserDetails userDetails = userService.loadUserByUsername(username);
 
+                // ===================================================================
+                // MỚI THÊM: CHẶN NGAY NẾU TÀI KHOẢN ĐÃ BỊ KHÓA (isEnabled == false)
+                // ===================================================================
+                if (!userDetails.isEnabled()) {
+                    System.out.println(">>> JWT Filter: Chặn tài khoản bị khóa: " + username);
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // Bắn lỗi 401
+                    response.setContentType("application/json; charset=UTF-8");
+                    response.getWriter().write("{\"error\": \"Tài khoản của bạn đã bị khóa bởi Admin!\"}");
+                    return; // Return luôn, KHÔNG cho code chạy tiếp xuống dưới
+                }
+                // ===================================================================
+
                 if (jwtService.validateToken(token, userDetails)) {
                     List<String> roles = null;
                     try {

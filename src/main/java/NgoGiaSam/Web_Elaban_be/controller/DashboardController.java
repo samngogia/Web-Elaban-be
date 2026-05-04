@@ -1,27 +1,45 @@
 package NgoGiaSam.Web_Elaban_be.controller;
 
+import NgoGiaSam.Web_Elaban_be.dao.OrderDetailRespository;
 import NgoGiaSam.Web_Elaban_be.dao.OrderRespository;
 import NgoGiaSam.Web_Elaban_be.dao.ProductRespository;
 import NgoGiaSam.Web_Elaban_be.dao.UserRespository;
+import NgoGiaSam.Web_Elaban_be.dto.ProductSalesDTO;
 import NgoGiaSam.Web_Elaban_be.enity.Order;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
+@CrossOrigin("*")
 @RequestMapping("/admin/dashboard")
 @RequiredArgsConstructor
 public class DashboardController {
     private final OrderRespository orderRespository;
     private final ProductRespository productRespository;
     private final UserRespository userRespository;
+
+    @Autowired
+    private OrderDetailRespository orderDetailRepository;
+
+    @GetMapping("/top-selling") // (Hoặc /top-selling tuỳ thuộc vào @RequestMapping trên đầu class của bạn)
+    public ResponseEntity<?> getTopSelling7Days() {
+        // Lấy ngày của 7 ngày trước
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, -7);
+        Date sevenDaysAgo = cal.getTime();
+
+        // Lấy Top 5
+        List<ProductSalesDTO> topProducts = orderDetailRepository.findTopSellingProducts(
+                sevenDaysAgo,
+                PageRequest.of(0, 5)
+        );
+        return ResponseEntity.ok(topProducts);
+    }
 
     @GetMapping("/stats")
     public ResponseEntity<?> getStats() {

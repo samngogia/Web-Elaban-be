@@ -35,7 +35,7 @@ public class Product {
     private double sellingPrice;
 
     @Column(name = "quantity")
-    private int quantity;
+    private Long quantity;
 
     @Column(name = "avg_rating") // Trung bình đánh giá
     private double avgRating;

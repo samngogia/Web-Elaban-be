@@ -64,42 +64,58 @@ public class OrderService {
         order.setPhoneNumber(request.getPhoneNumber());
         order.setNote(request.getNote());
 
-
         Order savedOrder = orderRespository.save(order);
 
-        // 4. Tạo OrderDetail cho từng sản phẩm
+        // 4. Tạo OrderDetail và TRỪ SỐ LƯỢNG TỒN KHO
         for (CheckoutRequest.CheckoutItem item : request.getItems()) {
             Product product = productRespository.findById(item.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found"));
 
+            // --- ĐOẠN MỚI THÊM: Kiểm tra và trừ số lượng sản phẩm ---
+            Long currentQuantity = product.getQuantity();
+            Long buyQuantity = item.getQuantity();
+
+            if (currentQuantity < buyQuantity) {
+                throw new RuntimeException("Sản phẩm '" + product.getName() + "' không đủ số lượng trong kho (Chỉ còn " + currentQuantity + ").");
+            }
+
+            // Trừ kho và lưu lại
+
+            product.setQuantity(currentQuantity - buyQuantity);
+            productRespository.save(product);
+            // --------------------------------------------------------
+
             OrderDetail detail = new OrderDetail();
             detail.setOrder(savedOrder);
             detail.setProduct(product);
-            detail.setQuantity(item.getQuantity());
+            detail.setQuantity( buyQuantity);
             detail.setPrice(item.getPrice());
             orderDetailRespository.save(detail);
         }
 
-        // 5. Xóa giỏ hàng sau khi đặt hàng
+        // 5. Dọn dẹp giỏ hàng (Chỉ xóa những món đã đặt thành công)
         cartRespository.findByUser_Id(request.getUserId()).ifPresent(cart -> {
-            cartItemRespository.deleteAll(
-                    cartItemRespository.findByCart_Id(cart.getId())
-            );
+            List<CartItem> currentCartItems = cartItemRespository.findByCart_Id(cart.getId());
+
+            for (CheckoutRequest.CheckoutItem checkoutItem : request.getItems()) {
+                // Tìm trong giỏ hàng xem có món này không, nếu có thì xóa
+                currentCartItems.stream()
+                        .filter(cItem -> cItem.getProduct().getId().equals(checkoutItem.getProductId()))
+                        .findFirst()
+                        .ifPresent(cartItemRespository::delete);
+            }
         });
 
+        // 6. Gửi Email thông báo
         try {
             String customerEmail = user.getEmail();
             if (customerEmail != null && !customerEmail.isEmpty()) {
-
-                // Tạm thời MỞ KHÓA, cho phép gửi mail với mọi hình thức thanh toán (cả VNPAY và COD)
                 System.out.println("Đang chuẩn bị gửi mail cho: " + customerEmail);
-
                 emailService.sendOrderConfirmationEmail(customerEmail, savedOrder);
-
                 System.out.println(">>> ĐÃ GỬI MAIL THÀNH CÔNG! <<<");
             }
         } catch (Exception e) {
-            e.printStackTrace(); // In chi tiết lỗi ra nếu có
+            e.printStackTrace();
             System.err.println("LỖI KHI GỬI EMAIL: " + e.getMessage());
         }
 
