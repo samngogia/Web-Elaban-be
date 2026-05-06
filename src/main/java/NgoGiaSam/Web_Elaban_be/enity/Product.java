@@ -44,6 +44,9 @@ public class Product {
     @Column(name = "color")
     private String color;
 
+
+    @Column(name = "active")
+    private Boolean active = true;
     ;
     // --- CÁC MỐI QUAN HỆ (RELATIONSHIPS) ---
 
